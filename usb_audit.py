@@ -27,6 +27,23 @@ def get_usb_device_info():
     result = subprocess.run(['ioreg', '-p', 'IOUSB', '-l'], capture_output=True, text=True)
     return result.stdout
 
+# Function to perform advanced checks
+def perform_advanced_checks(log_file):
+    log_message("🛡️ Running advanced checks...", log_file)
+
+    # Check for suspicious shell history
+    log_message("🧠 Suspicious shell history (curl/wget/sudo):", log_file)
+    log_message("🔍 Checking for suspicious shell history...", log_file)
+    shell_history_result = subprocess.run(['grep', '-E', 'curl|wget|osascript|sudo', '~/.zsh_history'], capture_output=True, text=True, shell=True)
+    log_message(shell_history_result.stdout, log_file)
+    if shell_history_result.stdout:
+        suspicious_commands = shell_history_result.stdout.strip()
+        log_message(f"🚩 Red Flag: Suspicious shell command executed after USB plug-in! Commands: {suspicious_commands}. This could indicate an attempt to download or execute malicious scripts. Review recent command history and ensure no unauthorized scripts are running.", log_file)
+
+    # Add any other advanced checks here
+
+    log_message("🛡️ Advanced checks completed.", log_file)
+
 # Main function
 def main():
     parser = argparse.ArgumentParser(description='USB Audit Mode')
@@ -105,21 +122,4 @@ def main():
         time.sleep(1)
 
 if __name__ == "__main__":
-    main()
-
-# Function to perform advanced checks
-def perform_advanced_checks(log_file):
-    log_message("🛡️ Running advanced checks...", log_file)
-
-    # Check for suspicious shell history
-    log_message("🧠 Suspicious shell history (curl/wget/sudo):", log_file)
-    log_message("🔍 Checking for suspicious shell history...", log_file)
-    shell_history_result = subprocess.run(['grep', '-E', 'curl|wget|osascript|sudo', '~/.zsh_history'], capture_output=True, text=True, shell=True)
-    log_message(shell_history_result.stdout, log_file)
-    if shell_history_result.stdout:
-        suspicious_commands = shell_history_result.stdout.strip()
-        log_message(f"🚩 Red Flag: Suspicious shell command executed after USB plug-in! Commands: {suspicious_commands}. This could indicate an attempt to download or execute malicious scripts. Review recent command history and ensure no unauthorized scripts are running.", log_file)
-
-    # Add any other advanced checks here
-
-    log_message("🛡️ Advanced checks completed.", log_file) 
+    main() 
