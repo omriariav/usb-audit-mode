@@ -46,7 +46,7 @@ By default, the script displays comments and status messages on the screen. Use 
 
 ## 🚨 Advanced Mode Checks
 
-When running `usb_audit_advanced.sh --advanced`, the script also:
+When running `python3 usb_audit.py --advanced`, the script also:
 
 - Detects `Terminal` launched after USB plug-in
 - Checks recent shell commands (`curl`, `wget`, `osascript`, `sudo`)
