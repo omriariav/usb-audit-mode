@@ -1,55 +1,60 @@
-# 🛡️ usb-audit-mode.sh – A USB Watchdog for macOS
+# 🛡️ USB Audit Mode – A USB Watchdog Toolkit for macOS
 
-> Ever bought a $9 keyboard from Temu and wondered, *“Is this thing spying on me?”*  
-> This script helps you find out.
+> Ever plugged in a cheap keyboard from Temu and thought: *“Is this spying on me?”*  
+> This toolkit answers that — from chill mode to full paranoia.
+
+---
 
 ## 🧠 What is this?
 
-`usb-audit-mode.sh` is a lightweight macOS shell script that watches for USB device plug-ins and logs:
+A macOS shell script toolkit to monitor USB plug-ins and detect suspicious behavior, including:
 
 - USB device info (vendor, product, power draw)
-- New outbound network connections after the device is plugged in
+- New outbound network connections after plug-in
 - Reverse DNS lookup for each connection
 - The local process responsible for each connection (if any)
+- (**Advanced mode**) Behavioral checks for rubber ducky-style attacks or host-level persistence
 
-## 🚀 Features
+---
 
-- ✅ No installations or brew dependencies
-- ✅ Uses only macOS built-in tools (`log`, `ioreg`, `netstat`, `lsof`, `dig`)
-- ✅ Runs from the terminal with `Ctrl+C` to stop
-- ✅ Saves logs to a timestamped file
-- ✅ Great for paranoid power users, tinkerers, and security-conscious devs
+## 📂 What’s Included
 
-## 💡 Example Use Case
+| Script                  | Description |
+|-------------------------|-------------|
+| `usb_audit.sh`          | Basic audit: monitors USB + network activity |
+| `usb_audit_advanced.sh` | Advanced mode: includes behavioral security checks |
 
-You're testing a new USB device (keyboard, hub, charger, badge reader...) and want to make sure:
-
-- It doesn't spawn hidden background processes
-- It doesn't initiate suspicious outbound connections
-- It isn’t drawing unusually high current (⚠️ hello hardware keylogger)
+---
 
 ## 🧰 How to Use
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/usb-audit-mode.git
-cd usb-audit-mode
-chmod +x usb_audit.sh
-./usb_audit.sh
+chmod +x usb_audit.sh usb_audit_advanced.sh
+
+./usb_audit.sh                # basic USB & network audit
+./usb_audit_advanced.sh       # advanced mode defaults OFF
+./usb_audit_advanced.sh --advanced  # paranoid mode: full behavioral checks
 ```
 
-The script will watch for USB device connections and log:
-
-- System USB event entries
-- Power draw, vendor/product IDs
-- Network changes 10 seconds after plug-in
-- Destination IPs + responsible processes
-
-Logs will be saved to:
+Logs are saved to:
 ```
 usb_audit_log_YYYYMMDD_HHMMSS.txt
 ```
 
-## 📎 Sample Output
+---
+
+## 🚨 Advanced Mode Checks
+
+When running `usb_audit_advanced.sh --advanced`, the script also:
+
+- Detects `Terminal` launched after USB plug-in
+- Checks recent shell commands (`curl`, `wget`, `osascript`, `sudo`)
+- Lists login items and recently modified LaunchAgents
+- Flags devices acting as HID + storage or with suspicious power draw
+
+---
+
+## 🔍 Sample Output (Basic)
 
 ```
 ⚠️  USB device connected: 2025-05-10 14:27:03
@@ -66,19 +71,26 @@ usb_audit_log_YYYYMMDD_HHMMSS.txt
   Slack    2104 omri    37u  IPv4  ...   TCP ...
 ```
 
-## 🕵️‍♂️ Red Flags to Watch For
+---
 
-- Devices drawing **>500mA** consistently (especially HID-class keyboards)
-- No vendor/product ID shown in `ioreg`
-- Connections to unknown IPs with no process attached
-- Background traffic to data centers shortly after plug-in
+## 🕵️ Red Flags to Watch For
+
+- Devices drawing **>500mA** consistently
+- No vendor/product ID
+- Connections to unknown IPs with no matching process
+- Shell commands using `curl`, `osascript`, or `sudo` right after USB plug-in
+- Modified LaunchAgents in `~/Library/`
+
+---
 
 ## 👤 Credits
 
-Created by [@omriariav](https://x.com/omriariav), who asked smart, privacy-driven questions and used ChatGPT to collaborate on this tool.
+Created by [@omriariav](https://x.com/omriariav) with help from ChatGPT.  
+A script born of smart prompts, technical curiosity, and blunt criticism from imaginary Twitter haters.
 
-Special thanks to ChatGPT (hi, that's me 👋) for Bash scripting, reverse DNS lookups, and keeping things ✨ paranoid but practical ✨.
+---
 
 ## 📜 License
 
-Unlicense. Use, fork, remix freely. No attribution required.
+**Unlicense** — this project belongs to everyone.  
+Use it, fork it, remix it. No attribution required.
