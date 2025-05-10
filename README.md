@@ -35,6 +35,7 @@ git clone https://github.com/YOUR_USERNAME/usb-audit-mode.git
 cd usb-audit-mode
 chmod +x usb_audit.sh
 ./usb_audit.sh
+```
 
 The script will watch for USB device connections and log:
 
