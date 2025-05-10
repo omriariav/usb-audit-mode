@@ -53,6 +53,9 @@ def main():
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     log_file = f"usb_audit_log_{timestamp}.txt"
+    alert_log_file = f"usb_audit_alerts_{timestamp}.txt"
+    alerts = set()
+
     log_message("🔌 USB Audit Mode Started", log_file, args.verbose, always_print=True)
     log_message("🔍 Monitoring for USB plug-ins, network activity, and suspicious behaviors...", log_file, args.verbose, always_print=True)
 
@@ -76,13 +79,19 @@ def main():
             for line in usb_info.splitlines():
                 if "Current" in line and any(x in line for x in ["500", "600", "700", "800", "900", "1000"]):
                     device_info = line.split('=')[-1].strip()
-                    log_message(f"🚩 Red Flag: Device drawing more than 500mA! Device: {device_info}. This could indicate a device that is using more power than typical USB peripherals, potentially pointing to malicious hardware. Consider checking the device's specifications or replacing it if unexpected.", log_file, args.verbose, always_print=True)
+                    alert = f"🚩 Red Flag: Device drawing more than 500mA! Device: {device_info}. This could indicate a device that is using more power than typical USB peripherals, potentially pointing to malicious hardware. Consider checking the device's specifications or replacing it if unexpected."
+                    log_message(alert, log_file, args.verbose, always_print=True)
+                    alerts.add(alert)
                 if "Vendor" in line and "Unknown" in line:
                     device_info = line.split('=')[-1].strip()
-                    log_message(f"🚩 Red Flag: Device with no vendor ID! Device: {device_info}. Devices without a known vendor ID might be counterfeit or malicious. Verify the device's legitimacy or avoid using it if suspicious.", log_file, args.verbose, always_print=True)
+                    alert = f"🚩 Red Flag: Device with no vendor ID! Device: {device_info}. Devices without a known vendor ID might be counterfeit or malicious. Verify the device's legitimacy or avoid using it if suspicious."
+                    log_message(alert, log_file, args.verbose, always_print=True)
+                    alerts.add(alert)
                 if "Product" in line and "Unknown" in line:
                     device_info = line.split('=')[-1].strip()
-                    log_message(f"🚩 Red Flag: Device with no product ID! Device: {device_info}. Devices without a known product ID might be counterfeit or malicious. Verify the device's legitimacy or avoid using it if suspicious.", log_file, args.verbose, always_print=True)
+                    alert = f"🚩 Red Flag: Device with no product ID! Device: {device_info}. Devices without a known product ID might be counterfeit or malicious. Verify the device's legitimacy or avoid using it if suspicious."
+                    log_message(alert, log_file, args.verbose, always_print=True)
+                    alerts.add(alert)
 
             log_message("⏳ Waiting 10 seconds to observe network activity...", log_file, args.verbose, always_print=True)
             time.sleep(10)
@@ -107,8 +116,9 @@ def main():
                     if lsof_result.stdout:
                         log_message(lsof_result.stdout, log_file, args.verbose)
                     else:
-                        log_message("⚠️  No process found (connection may have closed)", log_file, args.verbose, always_print=True)
-                        log_message(f"🚩 Red Flag: Connection to unknown IP {ip} with no matching process! This could indicate unauthorized data exfiltration or communication with a malicious server. Consider monitoring network traffic or blocking the IP if unrecognized.", log_file, args.verbose, always_print=True)
+                        alert = f"🚩 Red Flag: Connection to unknown IP {ip} with no matching process! This could indicate unauthorized data exfiltration or communication with a malicious server. Consider monitoring network traffic or blocking the IP if unrecognized."
+                        log_message(alert, log_file, args.verbose, always_print=True)
+                        alerts.add(alert)
             else:
                 log_message("✅ No new network connections detected.", log_file, args.verbose, always_print=True)
 
@@ -118,6 +128,11 @@ def main():
                 perform_advanced_checks(log_file)
 
             log_message("📡 Audit continues...", log_file, args.verbose, always_print=True)
+
+            # Write unique alerts to a separate file
+            with open(alert_log_file, "w") as alert_file:
+                for alert in alerts:
+                    alert_file.write(alert + "\n")
 
         time.sleep(1)
 
