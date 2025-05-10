@@ -15,6 +15,7 @@ timestamp=$(date +"%Y%m%d_%H%M%S")
 log_file="usb_audit_log_${timestamp}.txt"
 
 echo "🔌 USB Audit Mode Started: $(date)" | tee -a "$log_file"
+echo "🔍 Monitoring for USB plug-ins and network activity..." | tee -a "$log_file"
 
 # Capture initial baseline of current network connections
 baseline_netstat=$(netstat -an | grep ESTABLISHED | sort)
@@ -26,11 +27,26 @@ while true; do
 
   if [[ -n "$usb_event" ]]; then
     echo "⚠️  USB device connected: $(date)" | tee -a "$log_file"
+    echo "🔍 USB event detected, logging details..." | tee -a "$log_file"
     echo "$usb_event" | tee -a "$log_file"
 
     # Log current USB device snapshot including power draw
     echo "🧪 USB Device Snapshot (ioreg):" | tee -a "$log_file"
+    echo "🔍 Gathering USB device information..." | tee -a "$log_file"
     ioreg -p IOUSB -l | grep -E "Product|Vendor|Serial|Current" | tee -a "$log_file"
+
+    # Check for red flags in USB device information
+    ioreg -p IOUSB -l | grep -E "Product|Vendor|Serial|Current" | while read line; do
+      if echo "$line" | grep -q "Current" && echo "$line" | grep -qE "[5-9][0-9]{2}|[1-9][0-9]{3,}"; then
+        echo "🚩 Red Flag: Device drawing more than 500mA!" | tee -a "$log_file"
+      fi
+      if echo "$line" | grep -q "Vendor" && echo "$line" | grep -q "Unknown"; then
+        echo "🚩 Red Flag: Device with no vendor ID!" | tee -a "$log_file"
+      fi
+      if echo "$line" | grep -q "Product" && echo "$line" | grep -q "Unknown"; then
+        echo "🚩 Red Flag: Device with no product ID!" | tee -a "$log_file"
+      fi
+    done
 
     echo "⏳ Waiting 10 seconds to observe network activity..." | tee -a "$log_file"
     sleep 10
@@ -40,11 +56,11 @@ while true; do
     new_connections=$(comm -13 <(echo "$baseline_netstat") <(echo "$new_netstat"))
 
     if [[ -n "$new_connections" ]]; then
-      echo "🔍 New network connections:" | tee -a "$log_file"
+      echo "🔍 New network connections detected:" | tee -a "$log_file"
       echo "$new_connections" | tee -a "$log_file"
       echo | tee -a "$log_file"
 
-      echo "🔎 Resolving responsible processes:" | tee -a "$log_file"
+      echo "🔎 Resolving responsible processes for new connections:" | tee -a "$log_file"
 
       # Extract destination IPs and resolve reverse DNS
       echo "$new_connections" | awk '{print $5}' | cut -d. -f1-4 | sort | uniq | while read ip; do
@@ -58,6 +74,7 @@ while true; do
           echo "$lsof_output" | tee -a "$log_file"
         else
           echo "⚠️  No process found (connection may have closed)" | tee -a "$log_file"
+          echo "🚩 Red Flag: Connection to unknown IP with no matching process!" | tee -a "$log_file"
         fi
         echo | tee -a "$log_file"
       done

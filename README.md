@@ -1,6 +1,6 @@
 # 🛡️ USB Audit Mode – A USB Watchdog Toolkit for macOS
 
-> Ever plugged in a cheap keyboard from Temu and thought: *“Is this spying on me?”*  
+> Ever plugged in a cheap keyboard and thought: *"Is this spying on me?"*  
 > This toolkit answers that — from chill mode to full paranoia.
 
 ---
@@ -17,29 +17,30 @@ A macOS shell script toolkit to monitor USB plug-ins and detect suspicious behav
 
 ---
 
-## 📂 What’s Included
+## 📂 What's Included
 
 | Script                  | Description |
 |-------------------------|-------------|
-| `usb_audit.sh`          | Basic audit: monitors USB + network activity |
-| `usb_audit_advanced.sh` | Advanced mode: includes behavioral security checks |
+| `usb_audit.py`          | Unified Python script for USB and network auditing with optional advanced checks |
+| `usb_audit.sh`          | Basic audit: monitors USB + network activity (legacy) |
+| `usb_audit_advanced.sh` | Advanced mode: includes behavioral security checks (legacy) |
 
 ---
 
 ## 🧰 How to Use
 
 ```bash
-chmod +x usb_audit.sh usb_audit_advanced.sh
-
-./usb_audit.sh                # basic USB & network audit
-./usb_audit_advanced.sh       # advanced mode defaults OFF
-./usb_audit_advanced.sh --advanced  # paranoid mode: full behavioral checks
+python3 usb_audit.py                # Run the audit with default settings
+python3 usb_audit.py --advanced     # Enable advanced checks
+python3 usb_audit.py --verbose      # Enable verbose output for detailed logs
 ```
 
 Logs are saved to:
 ```
 usb_audit_log_YYYYMMDD_HHMMSS.txt
 ```
+
+By default, the script displays comments and status messages on the screen. Use the `--verbose` flag to see detailed command outputs and logs.
 
 ---
 
@@ -73,13 +74,15 @@ When running `usb_audit_advanced.sh --advanced`, the script also:
 
 ---
 
-## 🕵️ Red Flags to Watch For
+## 🚨 Red Flags to Watch For
 
 - Devices drawing **>500mA** consistently
 - No vendor/product ID
 - Connections to unknown IPs with no matching process
 - Shell commands using `curl`, `osascript`, or `sudo` right after USB plug-in
 - Modified LaunchAgents in `~/Library/`
+
+These red flags are now displayed directly on the screen during the audit process, providing immediate feedback to the user.
 
 ---
 
